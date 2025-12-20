@@ -52,7 +52,7 @@ export function MemeImageViewer({
   return (
     <div className="flex h-full lg:w-[65%] bg-zinc-950 items-center justify-center p-8 relative">
       {showLoading && (
-        <div className="flex flex-col items-center gap-4 absolute inset-0 z-10">
+        <div className="flex flex-col items-center justify-center gap-4 absolute inset-0 z-10">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           <p className="text-sm text-muted-foreground">Loading meme...</p>
         </div>
