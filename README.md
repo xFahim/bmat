@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BMAT
+
+**Bangla Meme Annotation Tool** - A web application for annotating Bangla memes, developed for academic research at BRAC University.
+
+## About
+
+BMAT enables students and researchers to contribute to the first large-scale dataset for Bangla meme explanation and role labeling. Users can annotate memes with captions, helping build a comprehensive dataset for academic research.
+
+## Features
+
+- **Meme Annotation**: View and annotate Bangla memes with descriptive captions
+- **User Dashboard**: Track your annotation progress and history
+- **Admin Panel**: Manage users, review annotations, and upload new memes
+- **Secure Access**: Google OAuth authentication for BRAC University students
+
+## Screenshots
+
+### Home Page
+
+![Home Page](./snaps/home-page.png)
+
+### Annotation Interface
+
+![Annotation Page](./snaps/annotate-page.png)
+
+### Admin Dashboard
+
+![Admin Page](./snaps/admin-page.png)
+
+## Tech Stack
+
+- **Framework**: Next.js 16
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth (Google OAuth)
+- **Styling**: Tailwind CSS
+- **Language**: TypeScript
 
 ## Getting Started
 
-First, run the development server:
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Set up environment variables:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+ADMIN_EMAILS=admin@bracu.ac.bd
+```
+
+3. Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## License
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Developed for academic research purposes at BRAC University.
