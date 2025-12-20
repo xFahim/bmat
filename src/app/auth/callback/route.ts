@@ -18,10 +18,23 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get('code')
   const next = requestUrl.searchParams.get('next')
 
+  // Get origin from request URL (works in all environments)
+  // Fallback to environment variable for production if needed
+  const origin = requestUrl.origin || process.env.NEXT_PUBLIC_SITE_URL || ''
+
+  if (!origin) {
+    console.error('Unable to determine origin from request:', requestUrl.href)
+    return NextResponse.redirect(
+      new URL(AUTH_REDIRECT_PATHS.HOME, requestUrl.origin)
+    )
+  }
+
+  console.log('Auth callback received from origin:', origin)
+
   // Validate that we have an authorization code
   if (!code) {
     return NextResponse.redirect(
-      new URL(AUTH_REDIRECT_PATHS.HOME, requestUrl.origin)
+      new URL(AUTH_REDIRECT_PATHS.HOME, origin)
     )
   }
 
@@ -29,6 +42,6 @@ export async function GET(request: Request) {
   const supabase = await createClient()
 
   // Handle the callback flow using the service layer
-  return handleAuthCallback(supabase, code, next, requestUrl.origin)
+  return handleAuthCallback(supabase, code, next, origin)
 }
 

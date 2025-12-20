@@ -38,9 +38,11 @@ export default function AnnotatePage() {
       <TopNav />
 
       {isAllCaughtUp ? (
-        <AllCaughtUpCard />
+        <div className="flex-1 overflow-y-auto">
+          <AllCaughtUpCard />
+        </div>
       ) : (
-        <div className="flex flex-1 flex-col lg:flex-row">
+        <div className="flex flex-1 flex-col lg:flex-row overflow-y-auto">
           <MemeImageViewer
             imageUrl={imageUrl}
             loading={loading}

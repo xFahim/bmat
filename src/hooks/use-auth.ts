@@ -14,7 +14,21 @@ import { signInWithGoogle, signOut } from '@/lib/auth/services/auth-client.servi
 export function useAuth() {
   const handleGoogleLogin = useCallback(async () => {
     const supabase = createClient();
-    const origin = window.location.origin;
+    
+    // Get origin from window.location (works in browser)
+    // Fallback to environment variable for production if needed
+    const origin = 
+      typeof window !== 'undefined' 
+        ? window.location.origin 
+        : process.env.NEXT_PUBLIC_SITE_URL || '';
+    
+    if (!origin) {
+      const error = new Error('Unable to determine site origin. Please check your configuration.');
+      console.error('Authentication error:', error);
+      throw error;
+    }
+    
+    console.log('Using redirect origin:', origin);
     
     const { error } = await signInWithGoogle(supabase, origin);
     

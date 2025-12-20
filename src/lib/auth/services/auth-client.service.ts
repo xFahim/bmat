@@ -17,12 +17,20 @@ export async function signInWithGoogle(
   redirectOrigin: string
 ): Promise<{ error: Error | null }> {
   try {
-    const redirectTo = `${redirectOrigin}${AUTH_REDIRECT_PATHS.CALLBACK}`;
+    // Ensure we have a valid origin (no trailing slash)
+    const cleanOrigin = redirectOrigin.replace(/\/$/, '');
+    const redirectTo = `${cleanOrigin}${AUTH_REDIRECT_PATHS.CALLBACK}`;
+
+    console.log('OAuth redirect URL:', redirectTo);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
       },
     });
 
