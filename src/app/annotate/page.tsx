@@ -34,7 +34,7 @@ export default function AnnotatePage() {
     : null;
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-background min-h-screen">
+    <div className="fixed inset-0 flex flex-col bg-background min-h-screen overflow-y-auto lg:overflow-hidden">
       <TopNav />
 
       {isAllCaughtUp ? (
@@ -42,7 +42,7 @@ export default function AnnotatePage() {
           <AllCaughtUpCard />
         </div>
       ) : (
-        <div className="flex flex-1 flex-col lg:flex-row overflow-hidden">
+        <div className="flex flex-1 flex-col lg:flex-row h-full lg:overflow-hidden">
           <MemeImageViewer
             imageUrl={imageUrl}
             loading={loading}

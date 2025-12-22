@@ -35,7 +35,7 @@ export function AnnotationForm({
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <div className="flex flex-col h-full w-full lg:w-[35%] lg:min-w-[400px] lg:max-w-[600px] lg:flex-none border-t lg:border-t-0 lg:border-l border-border bg-background overflow-y-auto">
+    <div className="flex flex-col w-full lg:h-full lg:w-[35%] lg:min-w-[400px] lg:max-w-[600px] lg:flex-none border-t lg:border-t-0 lg:border-l border-border bg-background lg:overflow-y-auto">
       <div className="flex flex-col w-full px-6 py-8 min-h-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
