@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useLayoutEffect, useRef, useEffect } from "react";
 import { Loader2, ZoomIn, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -24,16 +24,28 @@ export function MemeImageViewer({
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
-  // Reset loading state when imageUrl changes
-  useEffect(() => {
-    if (imageUrl) {
-      setImageLoading(true);
+  // Check if image is already loaded from cache
+  // Use useLayoutEffect to prevent flash of content
+  useLayoutEffect(() => {
+    if (!imageUrl) {
+        setImageLoading(false);
+        return;
+    }
+    
+    // If we have a ref and it is complete, we are loaded.
+    if (imgRef.current?.complete) {
+      setImageLoading(false);
       setImageError(false);
       setIsZoomed(false);
-    } else {
-      setImageLoading(false);
+      return;
     }
+
+    // Otherwise, set loading
+    setImageLoading(true);
+    setImageError(false);
+    setIsZoomed(false);
   }, [imageUrl]);
 
   const handleImageLoad = () => {
@@ -74,6 +86,7 @@ export function MemeImageViewer({
                 </div>
               </div>
             <img
+              ref={imgRef}
               src={imageUrl}
               alt="Meme to annotate"
               className={`object-contain max-h-[80vh] w-auto transition-opacity duration-300 rounded-md ${
