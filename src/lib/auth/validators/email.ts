@@ -4,23 +4,17 @@
  */
 
 /**
- * Validates if an email belongs to the allowed domain
+ * Validates if an email is allowed for authentication.
+ *
+ * Previously this enforced BRAC-only domains (e.g. @g.bracu.ac.bd).
+ * Now it simply checks for a syntactically valid email address so that
+ * any external account (e.g. normal Gmail) can sign in.
+ *
  * @param email - The email address to validate
- * @returns true if email ends with an allowed domain (student or faculty), false otherwise
+ * @returns true if email format is valid, false otherwise
  */
 export function isValidEmailDomain(email: string | null | undefined): boolean {
-  if (!email || typeof email !== "string") {
-    return false;
-  }
-
-  // Trim whitespace and convert to lowercase for consistent comparison
-  const normalizedEmail = email.trim().toLowerCase();
-
-  // Check for both student and faculty domains
-  const isStudent = normalizedEmail.endsWith("@g.bracu.ac.bd");
-  const isFaculty = normalizedEmail.endsWith("@bracu.ac.bd");
-
-  return isStudent || isFaculty;
+  return isValidEmailFormat(email);
 }
 
 /**

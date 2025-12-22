@@ -8,7 +8,7 @@ BMAT enables students and researchers to contribute to the first large-scale dat
 
 ## Features
 
-- **Meme Annotation**: View and annotate Bangla memes with descriptive captions
+- **Meme Annotation**: View and annotate Bangla memes with descriptive captions.
 - **User Dashboard**: Track your annotation progress and history
 - **Admin Panel**: Manage users, review annotations, and upload new memes
 - **Secure Access**: Google OAuth authentication for BRAC University students
@@ -49,7 +49,7 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-ADMIN_EMAILS=admin@bracu.ac.bd
+ADMIN_EMAILS=admin@bracu.ac.bd,sub...@bracu.ac.bd
 ```
 
 3. Run the development server:
