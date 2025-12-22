@@ -79,6 +79,9 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, fetchMemeBatchHelper, preloadImages]);
 
+  // Ref to track if a background fetch is in progress to prevent duplicates
+  const isFetchingBackground = React.useRef(false);
+
   const consumeNextMeme = useCallback(async () => {
     if (!user) return;
     
@@ -86,8 +89,9 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
     setMemeQueue((prev) => {
       const newQueue = prev.slice(1);
       
-      // 2. Background fetch if queue is running low
-      if (newQueue.length < 3) {
+      // 2. Background fetch if queue is running low AND we are not already fetching
+      if (newQueue.length < 3 && !isFetchingBackground.current) {
+        isFetchingBackground.current = true;
         // Trigger background fetch, don't await it here to keep UI responsive
         fetchMemeBatchHelper(user.id, 5).then((result) => {
            if (result.memes && result.memes.length > 0) {
@@ -106,6 +110,8 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
            }
         }).catch(err => {
             console.error("Background fetch failed", err);
+        }).finally(() => {
+            isFetchingBackground.current = false;
         });
       }
 
