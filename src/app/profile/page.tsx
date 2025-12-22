@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { getUserStats, getUserHistory, updateAnnotation } from "@/services/user";
@@ -12,13 +13,25 @@ import {
 import { Annotation } from "@/types/annotations";
 import { TopNav } from "@/components/annotate/top-nav";
 import { useToast } from "@/hooks/use-toast";
+import { Highlighter } from "@/components/ui/highlighter";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { ShieldAlert } from "lucide-react";
+import { checkUserAdminStatus } from "./actions";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [editingAnnotation, setEditingAnnotation] = useState<Annotation | null>(null);
   const [editedExplanation, setEditedExplanation] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userProfile, setUserProfile] = useState<{
+    name: string;
+    avatarUrl?: string;
+  } | null>(null);
   const { toast } = useToast();
 
   // Fetch annotations function
@@ -44,10 +57,29 @@ export default function ProfilePage() {
         return;
       }
 
+
       if (!currentUser) {
         console.warn("No user found - user not authenticated");
         setLoading(false);
         return;
+      }
+
+      // Check Admin Status
+      const adminStatus = await checkUserAdminStatus();
+      setIsAdmin(adminStatus);
+
+      // Fetch user profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("id", currentUser.id)
+        .single();
+
+      if (profile) {
+        setUserProfile({
+          name: profile.full_name || currentUser.email?.split("@")[0] || "User",
+          avatarUrl: profile.avatar_url,
+        });
       }
 
       // Fetch history and convert to Annotation format
@@ -178,23 +210,74 @@ export default function ProfilePage() {
     );
   }
 
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Top Navigation */}
       <TopNav />
 
       {/* Main Content */}
-      <div className="flex flex-1 flex-col gap-6 p-6 lg:flex-row">
-        {/* Left Side - Stats Section */}
-        <ProfileStatsSection
-          totalAnnotated={stats.total}
-          pendingReview={stats.pending}
-          approved={stats.approved}
-        />
 
-        {/* Right Side - History Section */}
-        <AnnotationTable annotations={annotations} onEdit={handleEditClick} />
+      {/* Main Content */}
+      <div className="flex flex-1 flex-col p-6 lg:p-10">
+        
+        {/* TOP PART: Profile Avatar and Header */}
+        <section className="flex flex-col items-center justify-center space-y-6 py-8 mb-10 shrink-0">
+          <Avatar className="h-32 w-32 border-4 border-zinc-800 shadow-2xl">
+            {userProfile?.avatarUrl && (
+              <AvatarImage 
+                src={userProfile.avatarUrl} 
+                alt={userProfile.name} 
+              />
+            )}
+          </Avatar>
+          <div className="text-center space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight">
+              Hey,{" "}
+              <Highlighter action="underline" color="#eab308">
+                {userProfile?.name}
+              </Highlighter>
+            </h1>
+
+            <p className="text-lg text-muted-foreground max-w-md mx-auto">
+              Welcome back to your dashboard. Here is an overview of your contributions and history.
+            </p>
+            
+            {isAdmin && (
+              <div className="pt-4">
+                <Button 
+                  onClick={() => router.push("/admin")}
+                  className="gap-2 bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 hover:text-yellow-400 border border-yellow-500/50"
+                  variant="outline"
+                >
+                  <ShieldAlert className="h-4 w-4" />
+                  View Admin Dashboard
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* BOTTOM PART: Split Horizontally */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-0"> 
+          
+          {/* Part 1: Your Valuable Contribution */}
+          <div className="h-full">
+            <ProfileStatsSection
+              totalAnnotated={stats.total}
+              pendingReview={stats.pending}
+              approved={stats.approved}
+            />
+          </div>
+
+          {/* Part 2: Annotation History */}
+          <div className="h-full">
+             <AnnotationTable annotations={annotations} onEdit={handleEditClick} />
+          </div>
+
+        </div>
       </div>
+
 
       {/* Edit Dialog */}
       <EditAnnotationDialog
@@ -208,3 +291,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

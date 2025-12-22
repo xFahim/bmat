@@ -7,8 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShieldAlert, Upload } from "lucide-react";
 import { AdminStatsSection, UserTable } from "@/components/admin";
-import { getAllUsers, getOverallStats } from "@/services/admin";
-import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminDashboardPage() {
@@ -31,31 +29,36 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const supabase = createClient();
 
-      // Fetch users and stats in parallel
-      const [usersResult, statsResult] = await Promise.all([
-        getAllUsers(supabase),
-        getOverallStats(supabase),
-      ]);
+      try {
+        const { getAdminDashboardData } = await import("./actions");
+        const { usersResult, statsResult } = await getAdminDashboardData();
 
-      if (usersResult.success) {
-        setUsers(usersResult.users);
-      } else {
+        if (usersResult.success) {
+          setUsers(usersResult.users);
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: usersResult.error || "Failed to load users",
+          });
+        }
+
+        if (statsResult.success && statsResult.stats) {
+          setOverallStats(statsResult.stats);
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: statsResult.error || "Failed to load statistics",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin data:", error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: usersResult.error || "Failed to load users",
-        });
-      }
-
-      if (statsResult.success && statsResult.stats) {
-        setOverallStats(statsResult.stats);
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: statsResult.error || "Failed to load statistics",
+          description: "Failed to connect to server",
         });
       }
 

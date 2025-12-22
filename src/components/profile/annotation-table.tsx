@@ -16,6 +16,9 @@ import { SearchBar } from "@/components/shared";
 import { AnnotationTableRow } from "./annotation-table-row";
 import { filterAnnotations } from "@/lib/utils/annotations";
 
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 interface AnnotationTableProps {
   annotations: Annotation[];
   onEdit: (annotation: Annotation) => void;
@@ -27,6 +30,7 @@ export function AnnotationTable({
   onEdit,
   initialVisibleCount = 5,
 }: AnnotationTableProps) {
+  // ... (state and effects same as before)
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(initialVisibleCount);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -70,58 +74,64 @@ export function AnnotationTable({
   }, [annotations, searchQuery]);
 
   return (
-    <div className="flex-1">
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Annotation History</h2>
-      </div>
+    <Card className="flex flex-col h-full border-zinc-800 bg-zinc-900/50 backdrop-blur-xl">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+            <CardTitle className="text-xl font-bold">Annotation History</CardTitle>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="flex-1 overflow-hidden flex flex-col">
+        {/* Search Bar */}
+        <SearchBar
+          placeholder="Search annotations..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+          className="mb-6"
+        />
 
-      {/* Search Bar */}
-      <SearchBar
-        placeholder="Search annotations..."
-        value={searchQuery}
-        onChange={setSearchQuery}
-        className="mb-6"
-      />
-
-      {/* Table */}
-      <div
-        ref={tableRef}
-        className="max-h-[600px] overflow-y-auto rounded-lg border border-zinc-800"
-      >
-        <Table>
-          <TableHeader>
-            <TableRow className="border-zinc-800">
-              <TableHead className="w-[100px]">Meme</TableHead>
-              <TableHead>Explanation</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-[100px]">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredAnnotations.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-center text-muted-foreground"
-                >
-                  No annotations found
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredAnnotations.map((annotation) => (
-                <AnnotationTableRow
-                  key={annotation.id}
-                  annotation={annotation}
-                  onEdit={onEdit}
-                />
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+        {/* Table */}
+        <div
+            ref={tableRef}
+            className="flex-1 overflow-y-auto rounded-lg border border-zinc-800"
+        >
+            <Table>
+            <TableHeader>
+                <TableRow className="border-zinc-800 bg-zinc-900/50 sticky top-0 z-10 hover:bg-zinc-900/50">
+                <TableHead className="w-[100px]">Meme</TableHead>
+                <TableHead>Explanation</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[100px]">Action</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {filteredAnnotations.length === 0 ? (
+                <TableRow>
+                    <TableCell
+                    colSpan={4}
+                    className="text-center text-muted-foreground h-24"
+                    >
+                    No annotations found
+                    </TableCell>
+                </TableRow>
+                ) : (
+                filteredAnnotations.map((annotation) => (
+                    <AnnotationTableRow
+                    key={annotation.id}
+                    annotation={annotation}
+                    onEdit={onEdit}
+                    />
+                ))
+                )}
+            </TableBody>
+            </Table>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
+
+
 
 
 

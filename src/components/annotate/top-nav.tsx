@@ -1,21 +1,45 @@
 "use client";
 
-import { Avatar } from "@/components/ui";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import {
   ChevronDown,
   User,
   LogOut,
   UserCircle,
   FileText,
+  Palette,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { createClient } from "@/utils/supabase/client";
 
 export function TopNav() {
   const [isOpen, setIsOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const router = useRouter();
   const { signOut } = useAuth();
+  
+  useEffect(() => {
+    async function fetchUserProfile() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .single();
+          
+        if (profile?.avatar_url) {
+          setAvatarUrl(profile.avatar_url);
+        }
+      }
+    }
+    
+    fetchUserProfile();
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
@@ -43,7 +67,13 @@ export function TopNav() {
                 {/* Static yellow dotted circle */}
                 <div className="absolute inset-0 -m-1 rounded-full border-2 border-dotted border-yellow-500/60" />
                 <Avatar className="h-8 w-8 relative z-10">
-                  <User className="h-4 w-4 text-muted-foreground" />
+                  {avatarUrl ? (
+                    <AvatarImage src={avatarUrl} alt="User Avatar" />
+                  ) : (
+                    <div className="flex bg-muted h-full w-full items-center justify-center">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
                 </Avatar>
               </div>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -57,6 +87,16 @@ export function TopNav() {
                   onClick={() => setIsOpen(false)}
                 />
                 <div className="absolute right-0 top-full mt-2 w-48 rounded-md border border-border bg-popover p-1 shadow-lg">
+                  <button 
+                    onClick={() => {
+                      router.push("/annotate");
+                      setIsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+                  >
+                    <Palette className="h-4 w-4" />
+                    Canvas
+                  </button>
                   <button 
                     onClick={() => {
                       router.push("/profile");

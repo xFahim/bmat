@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { PageTransitionLoader } from "@/components/shared";
+import { ClientProviders } from "@/components/providers/client-providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -72,9 +73,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${trickster.variable} ${frick.variable} ${ribes.variable} ${escapist.variable} ${nultien.variable} ${kulture.variable} antialiased`}
       >
-        <PageTransitionLoader />
-        {children}
-        <Toaster />
+        <ClientProviders>
+          <PageTransitionLoader />
+          {children}
+          <Toaster />
+        </ClientProviders>
       </body>
     </html>
   );

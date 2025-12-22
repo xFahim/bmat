@@ -6,14 +6,13 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { Annotation } from "@/types/annotations";
 import { UserData } from "@/types/users";
-import {
-  getPendingAnnotations,
-  reviewAnnotation,
-  getUserDetails,
-  banUser,
-  type PendingAnnotation,
-} from "@/services/admin";
-import { createClient } from "@/utils/supabase/client";
+import { type PendingAnnotation } from "@/services/admin";
+import { 
+  getAdminUserDetails, 
+  getAdminPendingAnnotations, 
+  adminReviewAnnotation, 
+  adminBanUser 
+} from "@/app/admin/actions";
 import { useToast } from "@/hooks/use-toast";
 
 export interface UseUserReviewReturn {
@@ -83,12 +82,10 @@ export function useUserReview(userId: string): UseUserReviewReturn {
       if (!userId) return;
 
       setLoading(true);
-      const supabase = createClient();
-
       // Fetch user details and pending annotations in parallel
       const [userResult, annotationsResult] = await Promise.all([
-        getUserDetails(supabase, userId),
-        getPendingAnnotations(supabase, userId),
+        getAdminUserDetails(userId),
+        getAdminPendingAnnotations(userId),
       ]);
 
       if (userResult.success && userResult.user) {
@@ -170,8 +167,7 @@ export function useUserReview(userId: string): UseUserReviewReturn {
   // Review handlers
   const handleApprove = useCallback(
     async (id: string) => {
-      const supabase = createClient();
-      const result = await reviewAnnotation(supabase, id, "approved");
+      const result = await adminReviewAnnotation(id, "approved");
 
       if (result.success) {
         // Optimistic UI update
@@ -194,8 +190,7 @@ export function useUserReview(userId: string): UseUserReviewReturn {
 
   const handleReject = useCallback(
     async (id: string) => {
-      const supabase = createClient();
-      const result = await reviewAnnotation(supabase, id, "rejected");
+      const result = await adminReviewAnnotation(id, "rejected");
 
       if (result.success) {
         // Optimistic UI update
@@ -218,9 +213,8 @@ export function useUserReview(userId: string): UseUserReviewReturn {
 
   // Bulk operations
   const handleBulkApprove = useCallback(async () => {
-    const supabase = createClient();
     const promises = selectedItems.map((id) =>
-      reviewAnnotation(supabase, id, "approved")
+      adminReviewAnnotation(id, "approved")
     );
 
     const results = await Promise.all(promises);
@@ -246,9 +240,8 @@ export function useUserReview(userId: string): UseUserReviewReturn {
   }, [selectedItems, toast]);
 
   const handleBulkReject = useCallback(async () => {
-    const supabase = createClient();
     const promises = selectedItems.map((id) =>
-      reviewAnnotation(supabase, id, "rejected")
+      adminReviewAnnotation(id, "rejected")
     );
 
     const results = await Promise.all(promises);
@@ -293,8 +286,7 @@ export function useUserReview(userId: string): UseUserReviewReturn {
     }
 
     setIsBanning(true);
-    const supabase = createClient();
-    const result = await banUser(supabase, userId);
+    const result = await adminBanUser(userId);
 
     if (result.success) {
       toast({
