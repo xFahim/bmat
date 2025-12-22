@@ -42,7 +42,7 @@ export default function AnnotatePage() {
           <AllCaughtUpCard />
         </div>
       ) : (
-        <div className="flex flex-1 flex-col lg:flex-row overflow-y-auto">
+        <div className="flex flex-1 flex-col lg:flex-row overflow-hidden">
           <MemeImageViewer
             imageUrl={imageUrl}
             loading={loading}

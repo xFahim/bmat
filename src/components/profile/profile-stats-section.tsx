@@ -77,6 +77,16 @@ export function ProfileStatsSection({
               <div className="text-sm text-muted-foreground">Approved</div>
             </div>
           </div>
+
+        </div>
+        {/* Footer Link */}
+        <div className="mt-auto pt-8 flex justify-center">
+          <button
+            onClick={() => router.push("/pricing")}
+            className="text-xs text-muted-foreground hover:text-foreground hover:underline transition-colors"
+          >
+            App Policy
+          </button>
         </div>
       </div>
     </div>

@@ -46,9 +46,15 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL('/annotate', request.url))
   }
 
-  // 2. If user is NOT logged in AND trying to access protected pages (not starting with /auth or /),
-  // kick them back to the Home Page ('/').
-  if (!user && !request.nextUrl.pathname.startsWith('/auth') && request.nextUrl.pathname !== '/') {
+  // 2. If user is NOT logged in AND trying to access protected pages
+  //    (not starting with /auth or /pricing or the Home Page '/'),
+  //    kick them back to the Home Page ('/').
+  if (
+    !user &&
+    !request.nextUrl.pathname.startsWith('/auth') &&
+    !request.nextUrl.pathname.startsWith('/pricing') &&
+    request.nextUrl.pathname !== '/'
+  ) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 

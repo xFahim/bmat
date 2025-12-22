@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { GoogleIcon } from "./google-icon";
 import { useAuth } from "@/hooks/use-auth";
+import Link from "next/link";
 
 /**
  * AuthSection Component
@@ -56,6 +57,14 @@ export function AuthSection() {
             <GoogleIcon />
             {isLoading ? "Connecting..." : "Continue with Google"}
           </Button>
+
+          <div className="mt-6">
+            <Link href="/pricing" className="w-full">
+              <Button variant="outline" className="w-full" size="lg">
+                How it works & App Policy
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

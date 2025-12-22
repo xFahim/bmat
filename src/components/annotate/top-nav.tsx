@@ -6,6 +6,7 @@ import {
   User,
   LogOut,
   UserCircle,
+  FileText,
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -65,6 +66,16 @@ export function TopNav() {
                   >
                     <UserCircle className="h-4 w-4" />
                     Profile
+                  </button>
+                  <button 
+                    onClick={() => {
+                      router.push("/pricing");
+                      setIsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+                  >
+                    <FileText className="h-4 w-4" />
+                    App Policy
                   </button>
                   <div className="my-1 h-px bg-border" />
                   <button 
