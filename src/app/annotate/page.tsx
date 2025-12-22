@@ -37,7 +37,15 @@ export default function AnnotatePage() {
     <div className="fixed inset-0 flex flex-col bg-background min-h-screen overflow-y-auto lg:overflow-hidden">
       <TopNav />
 
-      {isAllCaughtUp ? (
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+             {/* Simple Full Page Spinner */}
+             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+             <p className="text-muted-foreground animate-pulse">Fetching fresh memes...</p>
+          </div>
+        </div>
+      ) : isAllCaughtUp ? (
         <div className="flex-1 overflow-y-auto">
           <AllCaughtUpCard />
         </div>
@@ -45,7 +53,7 @@ export default function AnnotatePage() {
         <div className="flex flex-1 flex-col lg:flex-row h-full lg:overflow-hidden">
           <MemeImageViewer
             imageUrl={imageUrl}
-            loading={loading}
+            loading={false} // We handle global loading above, so viewer is always "ready" if we get here
             debugLog={debugLog}
             onImageError={setDebugLog}
           />
@@ -55,7 +63,7 @@ export default function AnnotatePage() {
             onSubmit={handleSubmit}
             onSkip={handleSkip}
             submitting={submitting}
-            disabled={!meme || loading}
+            disabled={!meme || submitting} // Removed loading check as we don't render this if loading
             sessionCount={sessionCount}
             debugLog={debugLog}
           />

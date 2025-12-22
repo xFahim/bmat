@@ -24,42 +24,31 @@ interface MemeContextType {
 const MemeContext = createContext<MemeContextType | undefined>(undefined);
 
 export function MemeProvider({ children }: { children: React.ReactNode }) {
-  const [meme, setMeme] = useState<Meme | null>(null);
-  const [nextMeme, setNextMeme] = useState<Meme | null>(null);
+  const [memeQueue, setMemeQueue] = useState<Meme[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAllCaughtUp, setIsAllCaughtUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [sessionCount, setSessionCount] = useState(0);
 
-  // Helper to preload image
-  const preloadImage = useCallback((memeData: Meme) => {
-    if (memeData.storage_path) {
-      const url = constructMemeImageUrl(memeData.storage_path);
-      const img = new Image();
-      img.src = url;
-    }
-  }, []);
-
-  // Helper to fetch
-  const fetchMemeHelper = useCallback(async (userId: string): Promise<{ meme: Meme | null, isAllCaughtUp: boolean, error: string | null }> => {
-    const supabase = createClient();
-    return await handleMemeFetch(supabase, userId);
-  }, []);
-
-  // Let's rely on the `user` state dependency in useCallback
-  const prefetchNextImpl = useCallback(async () => {
-      if (!user) return;
-      try {
-        const result = await fetchMemeHelper(user.id);
-        if (result.meme) {
-           setNextMeme(result.meme);
-           preloadImage(result.meme);
-        }
-      } catch (e) {
-        console.error("Error prefetching next meme", e);
+  // Helper to preload images
+  const preloadImages = useCallback((memes: Meme[]) => {
+    memes.forEach((memeData) => {
+      if (memeData.storage_path) {
+        const url = constructMemeImageUrl(memeData.storage_path);
+        const img = new Image();
+        img.src = url;
       }
-  }, [user, fetchMemeHelper, preloadImage]);
+    });
+  }, []);
+
+  // Helper to fetch batch
+  const fetchMemeBatchHelper = useCallback(async (userId: string, batchSize: number = 5) => {
+    const supabase = createClient();
+    // Dynamically import to avoid circular dependency issues if any, though likely not needed here
+    const { handleMemeBatchFetch } = await import("@/lib/annotate/handlers/meme-fetch.handler");
+    return await handleMemeBatchFetch(supabase, userId, batchSize);
+  }, []);
 
   const refreshMeme = useCallback(async () => {
     if (!user) return;
@@ -68,54 +57,74 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
     setIsAllCaughtUp(false);
     
     try {
-      const result = await fetchMemeHelper(user.id);
+      // Initial fetch with batch size 5
+      const result = await fetchMemeBatchHelper(user.id, 5);
       
       if (result.error) {
         setError(result.error);
-        setMeme(null);
-      } else if (result.isAllCaughtUp) {
+        setMemeQueue([]);
+      } else if (result.memes.length === 0) {
         setIsAllCaughtUp(true);
-        setMeme(null);
+        setMemeQueue([]);
       } else {
-        setMeme(result.meme);
+        setMemeQueue(result.memes);
         setIsAllCaughtUp(false);
-        // Trigger background prefetch
-        const nextResult = await fetchMemeHelper(user.id);
-        if (nextResult.meme) {
-            setNextMeme(nextResult.meme);
-            preloadImage(nextResult.meme);
-        }
+        preloadImages(result.memes);
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to refresh meme");
+      setError("Failed to refresh memes");
     } finally {
       setIsLoading(false);
     }
-  }, [user, fetchMemeHelper, preloadImage]);
+  }, [user, fetchMemeBatchHelper, preloadImages]);
 
   const consumeNextMeme = useCallback(async () => {
     if (!user) return;
     
-    if (nextMeme) {
-       setMeme(nextMeme);
-       setNextMeme(null);
-       
-       // Fetch new next
-       const result = await fetchMemeHelper(user.id);
-       if (result.meme) {
-           setNextMeme(result.meme);
-           preloadImage(result.meme);
-       }
-    } else {
-       await refreshMeme();
-    }
-  }, [user, nextMeme, refreshMeme, fetchMemeHelper, preloadImage]);
+    // 1. Optimistic update: Remove current meme instantly
+    setMemeQueue((prev) => {
+      const newQueue = prev.slice(1);
+      
+      // 2. Background fetch if queue is running low
+      if (newQueue.length < 3) {
+        // Trigger background fetch, don't await it here to keep UI responsive
+        fetchMemeBatchHelper(user.id, 5).then((result) => {
+           if (result.memes && result.memes.length > 0) {
+             setMemeQueue((currentQueue) => {
+               // Filter duplicates
+               const existingIds = new Set(currentQueue.map(m => m.id));
+               const uniqueNewMemes = result.memes.filter(m => !existingIds.has(m.id));
+               
+               if (uniqueNewMemes.length > 0) {
+                 // Preload newly added images
+                 preloadImages(uniqueNewMemes);
+                 return [...currentQueue, ...uniqueNewMemes];
+               }
+               return currentQueue;
+             });
+           }
+        }).catch(err => {
+            console.error("Background fetch failed", err);
+        });
+      }
+
+      // Check if we ran out completely even after slice
+      if (newQueue.length === 0) {
+         // If queue is empty, we attempt to refresh immediately to show loader
+         // But since we just sliced, we might want to trigger a refresh logic
+         // For now, let's just let the effect handle the empty state or user sees loader
+         refreshMeme(); 
+      }
+      
+      return newQueue;
+    });
+
+  }, [user, fetchMemeBatchHelper, preloadImages, refreshMeme]);
 
   const incrementSessionCount = useCallback(() => {
     setSessionCount(prev => prev + 1);
   }, []);
-
 
   // Initialize session
   useEffect(() => {
@@ -130,7 +139,8 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         console.error("Failed to initialize session:", err);
       } finally {
-        setIsLoading(false);
+        // Don't set loading false here because we want to wait for initial meme fetch
+        // dependent on user being set
       }
     };
     initSession();
@@ -138,23 +148,27 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
 
   // Initial fetch
   useEffect(() => {
-    // If we have user, but no meme, and not caught up -> fetch
-    // Also if we are NOT loading (meaning session check is done).
-    // `isLoading` starts true.
-    // If we have user, but no meme, and not caught up -> fetch
-    // Also guard against existing errors to prevent infinite loops
-    // and don't fetch if already loading (though refreshMeme handles that, better to avoid call)
-    if (user && !meme && !isAllCaughtUp && !error && !isLoading) {
+    // If we have user, but queue is empty, and not caught up -> fetch
+    if (user && memeQueue.length === 0 && !isAllCaughtUp && !error) {
        refreshMeme();
     }
-  }, [user, meme, isAllCaughtUp, error, isLoading, refreshMeme]);
+  }, [user, memeQueue.length, isAllCaughtUp, error, refreshMeme]);
+
+  // Derived state for consumers
+  const currentMeme = memeQueue.length > 0 ? memeQueue[0] : null;
+  const nextMeme = memeQueue.length > 1 ? memeQueue[1] : null;
+
+  // Loading state Logic:
+  // If we have items in queue, we are NOT loading from user perspective
+  // Only load if queue is empty and we are fetching
+  const effectiveLoading = isLoading && memeQueue.length === 0;
 
   return (
     <MemeContext.Provider
       value={{
-        meme,
-        nextMeme,
-        isLoading,
+        meme: currentMeme,
+        nextMeme: nextMeme,
+        isLoading: effectiveLoading,
         isAllCaughtUp,
         error,
         refreshMeme,
@@ -162,7 +176,7 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
         user,
         sessionCount,
         incrementSessionCount,
-        prefetchNext: prefetchNextImpl
+        prefetchNext: () => {}, // No-op now as it's handled automatically
       }}
     >
       {children}

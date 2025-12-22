@@ -61,6 +61,40 @@ export async function handleMemeFetch(
   }
 }
 
+export interface MemeBatchFetchResult {
+  memes: Meme[];
+  error: string | null;
+}
+
+/**
+ * Fetches a batch of memes for a user
+ * @param supabase - Supabase client instance
+ * @param userId - User ID
+ * @param batchSize - Size of batch to fetch
+ * @returns Batch fetch result
+ */
+export async function handleMemeBatchFetch(
+  supabase: SupabaseClient,
+  userId: string,
+  batchSize: number = 5
+): Promise<MemeBatchFetchResult> {
+  try {
+    const { fetchMemeBatchRpc } = await import("../services/meme-rpc.service");
+    const result = await fetchMemeBatchRpc(supabase, userId, batchSize);
+
+    return result;
+  } catch (error) {
+    console.error("Unexpected error in handleMemeBatchFetch:", error);
+    return {
+      memes: [],
+      error:
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred",
+    };
+  }
+}
+
 
 
 
