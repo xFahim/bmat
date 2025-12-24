@@ -18,17 +18,15 @@ interface AnnotationCardProps {
   annotation: Annotation;
   isSelected: boolean;
   onSelect: (id: string, checked: boolean) => void;
-  onApprove: (id: string) => void;
-  onReject: (id: string) => void;
-  onImageClick: (url: string) => void;
+  // onApprove/onReject removed from card logic
+  onImageClick: (id: string) => void;
 }
 
 export function AnnotationCard({
   annotation,
   isSelected,
   onSelect,
-  onApprove,
-  onReject,
+  // onApprove/onReject removed from card logic
   onImageClick,
 }: AnnotationCardProps) {
   const isPending = annotation.status === "Pending";
@@ -56,9 +54,13 @@ export function AnnotationCard({
         )}
       </CardHeader>
       <CardContent className="space-y-3">
-        <div
-          className="cursor-pointer rounded-lg overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-colors"
-          onClick={() => onImageClick(annotation.memeUrl)}
+      <div
+          className={`cursor-pointer rounded-lg overflow-hidden border transition-all ${
+            isSelected 
+              ? "border-primary ring-2 ring-primary ring-offset-2" 
+              : "border-zinc-800 hover:border-zinc-700"
+          }`}
+          onClick={() => onImageClick(annotation.id)} // Pass ID to select, validation happens up stream
         >
           <img
             src={annotation.memeUrl}
@@ -70,28 +72,7 @@ export function AnnotationCard({
           {annotation.explanation}
         </p>
       </CardContent>
-      {isPending && (
-        <CardFooter className="flex gap-2 pt-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex-1 gap-2"
-            onClick={() => onApprove(annotation.id)}
-          >
-            <CheckCheck className="h-4 w-4" />
-            Approve
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex-1 gap-2"
-            onClick={() => onReject(annotation.id)}
-          >
-            <XCircle className="h-4 w-4" />
-            Reject
-          </Button>
-        </CardFooter>
-      )}
+      {/* Footer Actions Removed as requested: Actions are now in Detail Panel */}
     </Card>
   );
 }

@@ -41,6 +41,9 @@ export interface UseUserReviewReturn {
   handleImageClick: (url: string) => void;
   handleBan: () => Promise<boolean>;
   setImageDialogOpen: (open: boolean) => void;
+  focusedAnnotationId: string | null;
+  setFocusedAnnotationId: (id: string | null) => void;
+  focusedAnnotation: Annotation | null;
 }
 
 /**
@@ -75,6 +78,7 @@ export function useUserReview(userId: string): UseUserReviewReturn {
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [isBanning, setIsBanning] = useState(false);
+  const [focusedAnnotationId, setFocusedAnnotationId] = useState<string | null>(null);
 
   // Fetch user details and pending annotations on mount
   useEffect(() => {
@@ -122,6 +126,18 @@ export function useUserReview(userId: string): UseUserReviewReturn {
     fetchData();
   }, [userId, toast]);
 
+  // Auto-focus first pending item on load
+  useEffect(() => {
+    if (!focusedAnnotationId && annotations.length > 0) {
+      const firstPending = annotations.find(a => a.status === "Pending");
+      if (firstPending) {
+        setFocusedAnnotationId(firstPending.id);
+      } else if (annotations.length > 0) {
+         setFocusedAnnotationId(annotations[0].id);
+      }
+    }
+  }, [annotations, focusedAnnotationId]);
+
   // Computed values
   const pendingCount = useMemo(
     () => annotations.filter((a) => a.status === "Pending").length,
@@ -145,6 +161,11 @@ export function useUserReview(userId: string): UseUserReviewReturn {
       selectedItems.length > 0 &&
       selectedItems.length < pendingAnnotations.length,
     [selectedItems.length, pendingAnnotations.length]
+  );
+
+  const focusedAnnotation = useMemo(
+    () => annotations.find((a) => a.id === focusedAnnotationId) || null,
+    [annotations, focusedAnnotationId]
   );
 
   // Selection handlers
@@ -268,8 +289,22 @@ export function useUserReview(userId: string): UseUserReviewReturn {
 
   // Image dialog handler
   const handleImageClick = useCallback((url: string) => {
-    setSelectedImage(url);
-    setImageDialogOpen(true);
+    // If url is passed as annotation ID, we focus, if it is a URL, we open dialog (backward compat/dual use)
+    // Actually, based on my plan, grid calls this with ID to focus. 
+    // Detail panel will call a different function to open FULL SCREEN.
+    // Let's repurpose this: if it looks like a URL, open dialog. If ID, focus. 
+    // Simpler: The Grid passes ID. The Detail Panel passes URL.
+    // Simpler: The Grid passes ID. The Detail Panel passes URL.
+    if (!url) return;
+    
+    // Check if it's a URL (rudimentary check but sufficient for this context)
+    // We assume IDs don't start with http
+    if (typeof url === 'string' && url.startsWith("http")) {
+        setSelectedImage(url);
+        setImageDialogOpen(true);
+    } else {
+        setFocusedAnnotationId(url);
+    }
   }, []);
 
   // Ban handler
@@ -332,6 +367,9 @@ export function useUserReview(userId: string): UseUserReviewReturn {
     handleImageClick,
     handleBan,
     setImageDialogOpen,
+    focusedAnnotationId,
+    setFocusedAnnotationId,
+    focusedAnnotation,
   };
 }
 
