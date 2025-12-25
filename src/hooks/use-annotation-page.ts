@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { submitAnnotation } from "@/lib/annotate/services/annotation.service";
+import { submitAnnotation, releaseMemeReservation } from "@/lib/annotate/services/annotation.service";
 import { validateCaptionInput, validateSubmissionData } from "@/lib/annotate/utils/validation.helpers";
 import {
   createValidationErrorToast,
@@ -54,7 +54,8 @@ export function useAnnotationPage(): UseAnnotationPageReturn {
   const [caption, setCaption] = useState("");
   const [debugLog, setDebugLog] = useState<string>("");
   const { toast } = useToast();
-  // We need router for redirects
+  // We need router for redirects - use require to avoid conditional hook issues if any, but standard import is better usually.
+  // Keeping original pattern.
   const { replace } = require("next/navigation").useRouter();
 
   // Sync context error to debugLog and handle redirects
@@ -63,7 +64,6 @@ export function useAnnotationPage(): UseAnnotationPageReturn {
       setDebugLog(contextError);
       
       // Auto-redirect on auth errors
-      // Supabase sometimes returns "JWT expired" or similar
       if (
         contextError.toLowerCase().includes("unauthorized") ||
         contextError.toLowerCase().includes("jwt") || 
@@ -129,6 +129,13 @@ export function useAnnotationPage(): UseAnnotationPageReturn {
     if (!meme || !user) {
       return;
     }
+    
+    // Release reservation in background - don't block UI
+    const supabase = createClient();
+    releaseMemeReservation(supabase, meme.id).catch(err => 
+      console.error("Failed to release skipped meme:", err)
+    );
+
     setCaption("");
     await consumeNextMeme();
   }, [meme, user, consumeNextMeme]);

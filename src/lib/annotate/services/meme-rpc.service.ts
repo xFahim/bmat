@@ -134,6 +134,30 @@ export async function fetchMemeBatchRpc(
   }
 }
 
+/**
+ * Releases the lock on a meme via RPC
+ * @param supabase - Supabase client
+ * @param memeId - ID of meme to unlock
+ */
+export async function releaseMemeLockRpc(
+  supabase: SupabaseClient,
+  memeId: number
+): Promise<{ error: string | null }> {
+  try {
+    const { error } = await supabase.rpc("release_meme_lock", {
+      meme_id_param: memeId,
+    });
+
+    if (error) {
+      return { error: error.message };
+    }
+    return { error: null };
+  } catch (err) {
+    console.error("Unexpected error in releaseMemeLockRpc:", err);
+    return { error: "Unexpected error" };
+  }
+}
+
 
 
 

@@ -6,6 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { SubmitAnnotationResult } from '../types';
 import { validateCaption, sanitizeCaption } from '../validators/caption';
+import { releaseMemeLockRpc } from './meme-rpc.service';
 
 /**
  * Submits an annotation to the database
@@ -89,13 +90,7 @@ export async function submitAnnotation(
 
     // SUCCESSFUL INSERT - NOW RELEASE RESERVATION
     // We update the meme to clear reserved_at and reserved_by
-    const { error: updateError } = await supabase
-      .from('memes')
-      .update({ 
-        reserved_at: null, 
-        reserved_by: null 
-      })
-      .eq('id', memeId);
+    const { error: updateError } = await releaseMemeLockRpc(supabase, memeId);
 
     if (updateError) {
       // NOTE: We do NOT fail the submission if this update fails, 
@@ -114,6 +109,26 @@ export async function submitAnnotation(
       success: false,
       error: 'An unexpected error occurred. Please try again.',
     };
+  }
+}
+
+/**
+ * Releases a meme reservation by clearing reserved_at and reserved_by
+ * @param supabase - Supabase client instance
+ * @param memeId - ID of the meme to release
+ */
+export async function releaseMemeReservation(
+  supabase: SupabaseClient,
+  memeId: number
+): Promise<void> {
+  try {
+    const { error } = await releaseMemeLockRpc(supabase, memeId);
+
+    if (error) {
+      console.error('[releaseMemeReservation] Failed to release reservation:', error);
+    }
+  } catch (error) {
+    console.error('[releaseMemeReservation] Unexpected error:', error);
   }
 }
 
