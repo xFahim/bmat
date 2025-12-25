@@ -29,6 +29,7 @@ export interface UseAnnotationPageReturn {
   handleSkip: () => Promise<void>;
   fetchNextMeme: () => Promise<void>;
   setDebugLog: (message: string) => void;
+  queueLength: number;
 }
 
 /**
@@ -45,20 +46,34 @@ export function useAnnotationPage(): UseAnnotationPageReturn {
     user, 
     sessionCount, 
     incrementSessionCount,
-    error: contextError 
+    error: contextError,
+    queueLength
   } = useMemeContext();
   
   const [submitting, setSubmitting] = useState(false);
   const [caption, setCaption] = useState("");
   const [debugLog, setDebugLog] = useState<string>("");
   const { toast } = useToast();
+  // We need router for redirects
+  const { replace } = require("next/navigation").useRouter();
 
-  // Sync context error to debugLog if needed
+  // Sync context error to debugLog and handle redirects
   useEffect(() => {
     if (contextError) {
       setDebugLog(contextError);
+      
+      // Auto-redirect on auth errors
+      // Supabase sometimes returns "JWT expired" or similar
+      if (
+        contextError.toLowerCase().includes("unauthorized") ||
+        contextError.toLowerCase().includes("jwt") || 
+        contextError.toLowerCase().includes("session")
+      ) {
+         toast(createErrorToast("Session expired. Please login again."));
+         replace("/login");
+      }
     }
-  }, [contextError]);
+  }, [contextError, replace, toast]);
 
   // Fetch next meme function (manual refresh)
   const fetchNextMeme = useCallback(async () => {
@@ -131,5 +146,6 @@ export function useAnnotationPage(): UseAnnotationPageReturn {
     handleSkip,
     fetchNextMeme,
     setDebugLog,
+    queueLength,
   };
 }

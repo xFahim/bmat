@@ -87,6 +87,23 @@ export async function submitAnnotation(
       };
     }
 
+    // SUCCESSFUL INSERT - NOW RELEASE RESERVATION
+    // We update the meme to clear reserved_at and reserved_by
+    const { error: updateError } = await supabase
+      .from('memes')
+      .update({ 
+        reserved_at: null, 
+        reserved_by: null 
+      })
+      .eq('id', memeId);
+
+    if (updateError) {
+      // NOTE: We do NOT fail the submission if this update fails, 
+      // because the annotation is already saved. 
+      // We just log it so we can investigate queue issues later.
+      console.error('[submitAnnotation] Failed to clear reservation after annotation:', updateError);
+    }
+
     return {
       success: true,
     };

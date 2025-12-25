@@ -26,6 +26,7 @@ export default function AnnotatePage() {
     handleSubmit,
     handleSkip,
     setDebugLog,
+    queueLength,
   } = useAnnotationPage();
 
   // Construct image URL from meme storage path
@@ -65,6 +66,7 @@ export default function AnnotatePage() {
             submitting={submitting}
             disabled={!meme || submitting} // Removed loading check as we don't render this if loading
             sessionCount={sessionCount}
+            queueLength={queueLength}
             debugLog={debugLog}
           />
         </div>

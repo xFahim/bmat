@@ -19,6 +19,7 @@ interface MemeContextType {
   sessionCount: number;
   incrementSessionCount: () => void;
   prefetchNext: () => void; 
+  queueLength: number;
 }
 
 const MemeContext = createContext<MemeContextType | undefined>(undefined);
@@ -67,9 +68,19 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
         setIsAllCaughtUp(true);
         setMemeQueue([]);
       } else {
-        setMemeQueue(result.memes);
-        setIsAllCaughtUp(false);
-        preloadImages(result.memes);
+        // Enforce freshness: STRICTLY ignore any meme with annotation_count > 0
+        const freshMemes = result.memes.filter(m => m.annotation_count === 0);
+        
+        if (freshMemes.length === 0 && result.memes.length > 0) {
+            // If we got memes but all were stale, we might be caught up or need to fetch more.
+            // For now, let's treat it as caught up or empty queue, effectively.
+            setIsAllCaughtUp(true);
+            setMemeQueue([]);
+        } else {
+            setMemeQueue(freshMemes);
+            setIsAllCaughtUp(false);
+            preloadImages(freshMemes);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -96,14 +107,14 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
         fetchMemeBatchHelper(user.id, 5).then((result) => {
            if (result.memes && result.memes.length > 0) {
              setMemeQueue((currentQueue) => {
-               // Filter duplicates
+               // Filter duplicates AND enforce freshness
                const existingIds = new Set(currentQueue.map(m => m.id));
-               const uniqueNewMemes = result.memes.filter(m => !existingIds.has(m.id));
+               const uniqueFreshMemes = result.memes.filter(m => !existingIds.has(m.id) && m.annotation_count === 0);
                
-               if (uniqueNewMemes.length > 0) {
+               if (uniqueFreshMemes.length > 0) {
                  // Preload newly added images
-                 preloadImages(uniqueNewMemes);
-                 return [...currentQueue, ...uniqueNewMemes];
+                 preloadImages(uniqueFreshMemes);
+                 return [...currentQueue, ...uniqueFreshMemes];
                }
                return currentQueue;
              });
@@ -183,6 +194,7 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
         sessionCount,
         incrementSessionCount,
         prefetchNext: () => {}, // No-op now as it's handled automatically
+        queueLength: memeQueue.length,
       }}
     >
       {children}

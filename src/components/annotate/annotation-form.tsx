@@ -14,6 +14,7 @@ interface AnnotationFormProps {
   submitting: boolean;
   disabled: boolean;
   sessionCount: number;
+  queueLength: number;
   debugLog?: string;
 }
 
@@ -29,6 +30,7 @@ export function AnnotationForm({
   submitting,
   disabled,
   sessionCount,
+  queueLength,
   debugLog,
 }: AnnotationFormProps) {
   const [isGuidelineOpen, setIsGuidelineOpen] = useState(false);
@@ -40,9 +42,14 @@ export function AnnotationForm({
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Annotate</h2>
-          <Badge variant="outline" className="text-sm">
-            {sessionCount} sessions
-          </Badge>
+          <div className="flex gap-2">
+            <Badge variant="outline" className="text-sm">
+              Queue: {queueLength}
+            </Badge>
+            <Badge variant="outline" className="text-sm">
+              {sessionCount} sessions
+            </Badge>
+          </div>
         </div>
 
         {/* Guidelines Section */}

@@ -13,7 +13,7 @@ export function AllCaughtUpCard() {
         <div className="flex justify-center mb-4">
           <CheckCircle2 className="h-16 w-16 text-primary" />
         </div>
-        <h2 className="text-2xl font-bold mb-2">All Caught Up! 🎉</h2>
+        <h2 className="text-2xl font-bold mb-2">All memes have been annotated! 🎉</h2>
         <p className="text-muted-foreground mb-4">
           You've annotated all available memes. Great work!
         </p>

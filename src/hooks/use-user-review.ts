@@ -51,7 +51,7 @@ export interface UseUserReviewReturn {
  */
 function transformPendingAnnotation(ann: PendingAnnotation): Annotation {
   return {
-    id: ann.id,
+    id: String(ann.id),
     memeUrl: ann.memeUrl,
     explanation: ann.caption,
     status: "Pending" as const,

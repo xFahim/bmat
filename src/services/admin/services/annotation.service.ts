@@ -75,7 +75,7 @@ export async function getPendingAnnotations(
       const storagePath = meme?.storage_path || '';
 
       return {
-        id: item.id,
+        id: String(item.id),
         memeId: item.meme_id,
         memeUrl: storagePath ? constructMemeImageUrl(storagePath) : '',
         caption: item.caption,
