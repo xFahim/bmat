@@ -16,7 +16,7 @@ import Link from "next/link";
 /**
  * AuthSection Component
  *
- * Displays the authentication/login section for BRAC University students.
+  * Displays the authentication/login section using Google OAuth.
  * Contains a card with Google OAuth login button.
  *
  * @returns {JSX.Element} The authentication section with login card
@@ -41,10 +41,10 @@ export function AuthSection() {
     <div className="flex min-h-screen items-center justify-center bg-card px-4 py-8 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md border shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl">Student Login</CardTitle>
+          <CardTitle className="text-2xl">Get Started</CardTitle>
           <CardDescription>
-            Exclusive for BRAC University Students. Please use your official
-            G-Suite account.
+            Open to all! Please use your personal Gmail account to log in or
+            sign up.
           </CardDescription>
         </CardHeader>
         <CardContent>
