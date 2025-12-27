@@ -107,7 +107,28 @@ export function useAnnotationPage(): UseAnnotationPageReturn {
       );
 
       if (!result.success) {
-        toast(createErrorToast(result.error || "Failed to save annotation. Please try again."));
+        // CHECK FOR DUPLICATE ERROR
+        // The RPC returns a specific message if the meme is already annotated
+        if (result.error && result.error.includes("already been annotated")) {
+          // Special handling for duplicates:
+          // 1. Show friendly toast
+          toast({
+            title: "Too late!",
+            description: `Someone else just finished this meme (ID: ${meme?.id})! Moving you to the next one.`,
+            variant: "destructive", // or default, but destructive grabs attention
+          });
+
+          // 2. Refresh meme batch entirely to clear potential local zombies
+          setCaption("");
+          incrementSessionCount();
+          // Force a full refresh instead of just consuming next, 
+          // because if we hit a duplicate, our entire local batch might be stale.
+          await fetchNextMeme(); 
+          return;
+        }
+
+        // Generic error
+        toast(createErrorToast("Failed to save annotation. Please try again."));
         return;
       }
 

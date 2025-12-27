@@ -57,25 +57,28 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     setIsAllCaughtUp(false);
     
+    // ZOMBIE PREVENTION: Clear queue immediately to ensure we don't show stale data
+    setMemeQueue([]); 
+    
     try {
       // Initial fetch with batch size 5
       const result = await fetchMemeBatchHelper(user.id, 5);
       
       if (result.error) {
         setError(result.error);
-        setMemeQueue([]);
+        // Queue already cleared
       } else if (result.memes.length === 0) {
         setIsAllCaughtUp(true);
-        setMemeQueue([]);
+        // Queue already cleared
       } else {
         // Enforce freshness: STRICTLY ignore any meme with annotation_count > 0
+        // Also ensure we don't accidentally add duplicates if we aren't clearing queue (though here we setMemeQueue)
         const freshMemes = result.memes.filter(m => m.annotation_count === 0);
         
         if (freshMemes.length === 0 && result.memes.length > 0) {
-            // If we got memes but all were stale, we might be caught up or need to fetch more.
-            // For now, let's treat it as caught up or empty queue, effectively.
+            // We got memes but they were all annotated already
             setIsAllCaughtUp(true);
-            setMemeQueue([]);
+            // Queue already cleared
         } else {
             setMemeQueue(freshMemes);
             setIsAllCaughtUp(false);
@@ -98,21 +101,30 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
     
     // 1. Optimistic update: Remove current meme instantly
     setMemeQueue((prev) => {
+      // Remove the first item
       const newQueue = prev.slice(1);
       
-      // 2. Background fetch if queue is running low AND we are not already fetching
-      if (newQueue.length < 3 && !isFetchingBackground.current) {
+      // Calculate if we need more
+      const shouldFetch = newQueue.length < 3 && !isFetchingBackground.current;
+
+      if (shouldFetch) {
         isFetchingBackground.current = true;
-        // Trigger background fetch, don't await it here to keep UI responsive
+        // Trigger background fetch
         fetchMemeBatchHelper(user.id, 5).then((result) => {
            if (result.memes && result.memes.length > 0) {
              setMemeQueue((currentQueue) => {
-               // Filter duplicates AND enforce freshness
-               const existingIds = new Set(currentQueue.map(m => m.id));
-               const uniqueFreshMemes = result.memes.filter(m => !existingIds.has(m.id) && m.annotation_count === 0);
+               // STRICT DUPLICATE CHECK
+               // 1. Get Set of all IDs currently in queue
+               const currentIds = new Set(currentQueue.map(m => m.id));
+               
+               // 2. Filter incoming batch:
+               //    - Must NOT be in current queue
+               //    - Must have annotation_count === 0
+               const uniqueFreshMemes = result.memes.filter(m => 
+                 !currentIds.has(m.id) && m.annotation_count === 0
+               );
                
                if (uniqueFreshMemes.length > 0) {
-                 // Preload newly added images
                  preloadImages(uniqueFreshMemes);
                  return [...currentQueue, ...uniqueFreshMemes];
                }
@@ -125,19 +137,11 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
             isFetchingBackground.current = false;
         });
       }
-
-      // Check if we ran out completely even after slice
-      if (newQueue.length === 0) {
-         // If queue is empty, we attempt to refresh immediately to show loader
-         // But since we just sliced, we might want to trigger a refresh logic
-         // For now, let's just let the effect handle the empty state or user sees loader
-         refreshMeme(); 
-      }
       
       return newQueue;
     });
 
-  }, [user, fetchMemeBatchHelper, preloadImages, refreshMeme]);
+  }, [user, fetchMemeBatchHelper, preloadImages]);
 
   const incrementSessionCount = useCallback(() => {
     setSessionCount(prev => prev + 1);

@@ -49,54 +49,26 @@ export async function submitAnnotation(
 
     const sanitizedCaption = sanitizeCaption(caption);
 
-    // Insert annotation into database
-    const { error } = await supabase.from('annotations').insert({
-      meme_id: memeId,
-      user_id: userId.trim(),
-      caption: sanitizedCaption,
-      status: 'pending',
+    // Call the RPC function
+    const { error } = await supabase.rpc('submit_final_annotation', {
+      p_meme_id: memeId,
+      p_caption: sanitizedCaption,
+      p_user_id: userId.trim(),
     });
 
     if (error) {
-      console.error('[submitAnnotation] Database error:', {
+      console.error('[submitAnnotation] RPC error:', {
         code: error.code,
         message: error.message,
         details: error.details,
       });
       
-      // Handle specific database errors without exposing internal details
-      if (error.code === '23505') {
-        // Unique constraint violation (user already annotated this meme)
-        return {
-          success: false,
-          error: 'You have already annotated this meme',
-        };
-      }
-
-      if (error.code === '23503') {
-        // Foreign key constraint violation
-        return {
-          success: false,
-          error: 'Invalid meme or user reference',
-        };
-      }
-
-      // Generic error - don't expose internal error messages
+      // Pass the raw error message back so the UI can handle specific cases
+      // like "already been annotated"
       return {
         success: false,
-        error: 'Failed to save annotation. Please try again.',
+        error: error.message, 
       };
-    }
-
-    // SUCCESSFUL INSERT - NOW RELEASE RESERVATION
-    // We update the meme to clear reserved_at and reserved_by
-    const { error: updateError } = await releaseMemeLockRpc(supabase, memeId);
-
-    if (updateError) {
-      // NOTE: We do NOT fail the submission if this update fails, 
-      // because the annotation is already saved. 
-      // We just log it so we can investigate queue issues later.
-      console.error('[submitAnnotation] Failed to clear reservation after annotation:', updateError);
     }
 
     return {
@@ -104,7 +76,6 @@ export async function submitAnnotation(
     };
   } catch (error) {
     console.error('[submitAnnotation] Unexpected error:', error);
-    // Don't expose error details to client
     return {
       success: false,
       error: 'An unexpected error occurred. Please try again.',
