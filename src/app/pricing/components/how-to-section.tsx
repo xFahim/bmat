@@ -68,7 +68,7 @@ export function HowToSection() {
                   </div>
                   <div className="relative aspect-auto min-h-[500px] w-full">
                     <Image
-                      src="/example1.png"
+                      src="/example_meme.png"
                       alt="Example meme annotation"
                       fill
                       className="object-contain"
@@ -123,7 +123,7 @@ export function HowToSection() {
                 <X className="h-6 w-6" />
               </button>
               <Image
-                src="/example1.png"
+                src="/example_meme.png"
                 alt="Example meme annotation full"
                 fill
                 className="object-contain"

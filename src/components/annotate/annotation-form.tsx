@@ -84,13 +84,10 @@ export function AnnotationForm({
                   </p>
                   <ul className="space-y-1 ml-4 list-disc text-muted-foreground">
                     <li>
-                      <span className="font-semibold text-foreground">Context:</span> What event/person is this about?
+                      <span className="font-semibold text-foreground">Context + Explanation:</span> What event/person is this about and what is the joke or criticism?
                     </li>
-                    <li>
-                      <span className="font-semibold text-foreground">Visuals:</span> What is clearly shown?
-                    </li>
-                    <li>
-                      <span className="font-semibold text-foreground">Meaning:</span> What is the joke or criticism?
+                    <li className="italic text-xs pt-1">
+                      Keep it concise (3-4 lines max).
                     </li>
                   </ul>
                 </div>
@@ -178,7 +175,7 @@ export function AnnotationForm({
                     <X className="h-6 w-6" />
                   </button>
                   <Image
-                    src="/example1.png"
+                    src="/example_meme.png"
                     alt="Example meme annotation full"
                     fill
                     className="object-contain"
