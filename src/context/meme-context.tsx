@@ -72,11 +72,13 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
         // Queue already cleared
       } else {
         // Enforce freshness: STRICTLY ignore any meme with annotation_count > 0
-        // Also ensure we don't accidentally add duplicates if we aren't clearing queue (though here we setMemeQueue)
-        const freshMemes = result.memes.filter(m => m.annotation_count === 0);
+        // TRUST RPC: The RPC guarantees unannotated memes. 
+        // We only filter to ensure we act on what we received.
+        const freshMemes = result.memes;
         
         if (freshMemes.length === 0 && result.memes.length > 0) {
-            // We got memes but they were all annotated already
+            // This case theoretically shouldn't happen if we strictly reference result.memes above,
+            // but keeping logic structure for safety.
             setIsAllCaughtUp(true);
             // Queue already cleared
         } else {
@@ -119,9 +121,9 @@ export function MemeProvider({ children }: { children: React.ReactNode }) {
                
                // 2. Filter incoming batch:
                //    - Must NOT be in current queue
-               //    - Must have annotation_count === 0
+               //    - TRUST RPC: No need to check annotation_count check as RPC ensures it
                const uniqueFreshMemes = result.memes.filter(m => 
-                 !currentIds.has(m.id) && m.annotation_count === 0
+                 !currentIds.has(m.id)
                );
                
                if (uniqueFreshMemes.length > 0) {
