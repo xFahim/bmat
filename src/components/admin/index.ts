@@ -10,3 +10,4 @@ export { AnnotationCard } from "./annotation-card";
 export { BulkActionBar } from "./bulk-action-bar";
 export { ImageDialog } from "./image-dialog";
 export { MemeUploader } from "./meme-uploader";
+export { DashboardActions } from "./dashboard-actions";

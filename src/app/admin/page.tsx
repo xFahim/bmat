@@ -6,7 +6,7 @@ import { TopNav } from "@/components/annotate/top-nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShieldAlert, Upload } from "lucide-react";
-import { AdminStatsSection, UserTable } from "@/components/admin";
+import { AdminStatsSection, UserTable, DashboardActions } from "@/components/admin";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminDashboardPage() {
@@ -88,6 +88,7 @@ export default function AdminDashboardPage() {
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
           </div>
           <div className="flex items-center gap-3">
+            <DashboardActions />
             <Button
               onClick={() => router.push("/admin/upload")}
               variant="default"

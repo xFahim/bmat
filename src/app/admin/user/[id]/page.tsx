@@ -23,6 +23,7 @@ export default function UserReviewPage() {
     selectedItems,
     loading,
     isBanning,
+    isBulkActionLoading,
     imageDialogOpen,
     selectedImage,
     pendingCount,
@@ -106,6 +107,7 @@ export default function UserReviewPage() {
                     selectedCount={selectedItems.length}
                     onApprove={handleBulkApprove}
                     onReject={handleBulkReject}
+                    isActionLoading={isBulkActionLoading}
                 />
              </div>
            )}

@@ -22,6 +22,7 @@ export interface UseUserReviewReturn {
   selectedItems: string[];
   loading: boolean;
   isBanning: boolean;
+  isBulkActionLoading: boolean;
   imageDialogOpen: boolean;
   selectedImage: string;
 
@@ -78,6 +79,7 @@ export function useUserReview(userId: string): UseUserReviewReturn {
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [isBanning, setIsBanning] = useState(false);
+  const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
   const [focusedAnnotationId, setFocusedAnnotationId] = useState<string | null>(null);
 
   // Fetch user details and pending annotations on mount
@@ -234,56 +236,66 @@ export function useUserReview(userId: string): UseUserReviewReturn {
 
   // Bulk operations
   const handleBulkApprove = useCallback(async () => {
-    const promises = selectedItems.map((id) =>
-      adminReviewAnnotation(id, "approved")
-    );
-
-    const results = await Promise.all(promises);
-    const allSuccess = results.every((r) => r.success);
-
-    if (allSuccess) {
-      // Optimistic UI update
-      setAnnotations((prev) =>
-        prev.map((ann) =>
-          selectedItems.includes(ann.id)
-            ? { ...ann, status: "Approved" as const }
-            : ann
-        )
+    setIsBulkActionLoading(true);
+    try {
+      const promises = selectedItems.map((id) =>
+        adminReviewAnnotation(id, "approved")
       );
-      setSelectedItems([]);
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Some annotations failed to approve",
-      });
+
+      const results = await Promise.all(promises);
+      const allSuccess = results.every((r) => r.success);
+
+      if (allSuccess) {
+        // Optimistic UI update
+        setAnnotations((prev) =>
+          prev.map((ann) =>
+            selectedItems.includes(ann.id)
+              ? { ...ann, status: "Approved" as const }
+              : ann
+          )
+        );
+        setSelectedItems([]);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Some annotations failed to approve",
+        });
+      }
+    } finally {
+      setIsBulkActionLoading(false);
     }
   }, [selectedItems, toast]);
 
   const handleBulkReject = useCallback(async () => {
-    const promises = selectedItems.map((id) =>
-      adminReviewAnnotation(id, "rejected")
-    );
-
-    const results = await Promise.all(promises);
-    const allSuccess = results.every((r) => r.success);
-
-    if (allSuccess) {
-      // Optimistic UI update
-      setAnnotations((prev) =>
-        prev.map((ann) =>
-          selectedItems.includes(ann.id)
-            ? { ...ann, status: "Rejected" as const }
-            : ann
-        )
+    setIsBulkActionLoading(true);
+    try {
+      const promises = selectedItems.map((id) =>
+        adminReviewAnnotation(id, "rejected")
       );
-      setSelectedItems([]);
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Some annotations failed to reject",
-      });
+
+      const results = await Promise.all(promises);
+      const allSuccess = results.every((r) => r.success);
+
+      if (allSuccess) {
+        // Optimistic UI update
+        setAnnotations((prev) =>
+          prev.map((ann) =>
+            selectedItems.includes(ann.id)
+              ? { ...ann, status: "Rejected" as const }
+              : ann
+          )
+        );
+        setSelectedItems([]);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Some annotations failed to reject",
+        });
+      }
+    } finally {
+      setIsBulkActionLoading(false);
     }
   }, [selectedItems, toast]);
 
@@ -348,6 +360,7 @@ export function useUserReview(userId: string): UseUserReviewReturn {
     selectedItems,
     loading,
     isBanning,
+    isBulkActionLoading,
     imageDialogOpen,
     selectedImage,
 

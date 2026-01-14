@@ -98,3 +98,67 @@ export async function adminBanUser(userId: string) {
   
   return result;
 }
+
+/**
+ * Server action to approve all pending annotations
+ * Uses service role client to bypass RLS
+ */
+export async function adminApproveAllPending() {
+  // Verify admin access
+  await requireAdmin();
+
+  const adminClient = createAdminClient();
+
+  try {
+    const { count, error } = await adminClient.rpc('approve_all_pending_annotations');
+    
+    if (error) throw error;
+    
+    return { success: true, count };
+  } catch (error: any) {
+    console.error("Error approving all pending annotations:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Server action to get all approved annotations as CSV
+ * Uses service role client to bypass RLS
+ */
+export async function adminGetApprovedAnnotationsCSV() {
+  // Verify admin access
+  await requireAdmin();
+
+  const adminClient = createAdminClient();
+
+  try {
+    const { data, error } = await adminClient.rpc('get_all_approved_annotations');
+    
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+        return { success: true, csv: "" };
+    }
+
+    // Convert data to CSV
+    // Assuming data is an array of objects
+    const headers = Object.keys(data[0]);
+    const csvRows = [
+      headers.join(','), // header row
+      ...data.map((row: any) => 
+        headers.map(header => {
+          const val = row[header] === null || row[header] === undefined ? "" : row[header];
+          // Escape quotes and wrap in quotes
+          const escaped = String(val).replace(/"/g, '""'); 
+          return `"${escaped}"`;
+        }).join(',')
+      )
+    ];
+    
+    return { success: true, csv: csvRows.join('\n') };
+
+  } catch (error: any) {
+    console.error("Error getting approved annotations CSV:", error);
+    return { success: false, error: error.message };
+  }
+}

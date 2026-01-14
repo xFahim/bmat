@@ -3,18 +3,20 @@
  */
 
 import { Button } from "@/components/ui/button";
-import { CheckCheck, XCircle } from "lucide-react";
+import { CheckCheck, XCircle, Loader2 } from "lucide-react";
 
 interface BulkActionBarProps {
   selectedCount: number;
   onApprove: () => void;
   onReject: () => void;
+  isActionLoading?: boolean;
 }
 
 export function BulkActionBar({
   selectedCount,
   onApprove,
   onReject,
+  isActionLoading = false,
 }: BulkActionBarProps) {
   if (selectedCount === 0) return null;
 
@@ -29,12 +31,26 @@ export function BulkActionBar({
             variant="destructive"
             onClick={onReject}
             className="gap-2"
+            disabled={isActionLoading}
           >
-            <XCircle className="h-4 w-4" />
+            {isActionLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <XCircle className="h-4 w-4" />
+            )}
             Reject Selected
           </Button>
-          <Button variant="default" onClick={onApprove} className="gap-2">
-            <CheckCheck className="h-4 w-4" />
+          <Button 
+            variant="default" 
+            onClick={onApprove} 
+            className="gap-2"
+            disabled={isActionLoading}
+          >
+            {isActionLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCheck className="h-4 w-4" />
+            )}
             Approve Selected
           </Button>
         </div>
@@ -42,6 +58,7 @@ export function BulkActionBar({
     </div>
   );
 }
+
 
 
 
